@@ -6,6 +6,7 @@ import Sidebar from "./components/Sidebar";
 import Services from "./components/Services";
 import Products from "./components/Products";
 import { Link, Routes, Route } from "react-router-dom";
+import axios from "axios";
 
 // once the .env is added and the S3 bucket is linked, use the S3 bucket images, until then use the public images directory
 // S3 bucket implementation occurs in lab 2
@@ -15,10 +16,13 @@ const imageUrl = import.meta.env.VITE_APP_S3_BUCKET_URL
 const COGNITO_AUTH_URL = import.meta.env.VITE_COGNITO_AUTH_URL;
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;
 const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI;
+const API_GATEWAY_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL;
 
 function App() {
   const [bannerColor, setBannerColor] = useState("dark");
   const [isUserSignedIn, setIsUserSignedIn] = useState(false);
+  const [createReportButtonText, setText] = useState('Create Report');
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   console.log(localStorage.getItem("idToken"));
   if (
     localStorage.getItem("idToken") == null ||
@@ -72,6 +76,26 @@ function App() {
     }, 1000);
   };
 
+  const handleCreateReport = (e) => {
+    e.preventDefault();
+    const idToken = localStorage.getItem("idToken");
+    // send to backend via a POST request
+    axios.post(`${API_GATEWAY_BASE_URL}/create-report`, {},{
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        console.log("got back response from create-report api", res.data)
+        setText("Report Sent to Email")
+      })
+      .catch((err) => {
+        // Handle the error appropriately, e.g., display an error message
+        console.error("Error requesting report:", err);
+      });
+  };
+
   return (
     <main>
       <div className="App">
@@ -101,6 +125,8 @@ function App() {
             <div>
               <div>Signed in as employee</div>
               <button
+                onClick={handleCreateReport}
+                disabled={isButtonDisabled}
                 style={{
                   color: "white",
                   backgroundColor: "gray",
@@ -111,7 +137,7 @@ function App() {
                   cursor: "pointer",
                 }}
               >
-                Create Report
+                {createReportButtonText}
               </button>
               <button
                 onClick={handleSignOut}
