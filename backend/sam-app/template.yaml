@@ -14,6 +14,39 @@ Globals:
       LogFormat: JSON
 
 Resources:
+  CreateReportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: handlers/create_report
+      Handler: create_report.lambda_handler
+      Runtime: python3.10
+      Architectures:
+        - x86_64
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/LambdaApplicationRoleSam'
+      Events:
+        CreateReport:
+          Type: Api
+          Properties:
+            RestApiId: !Ref BikeAPI
+            Path: /create-report
+            Method: post
+
+  StateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/LambdaApplicationRoleSam'
+      Definition:
+        Comment: Email Report Generation State Machine
+        StartAt: TriggerSNS
+        States:
+          TriggerSNS:
+            Type: Task
+            Resource: arn:aws:states:::sns:publish
+            Parameters:
+              TopicArn: !Ref SNSTopic
+              Message.$: "$.presigned_url_str"
+            End: true
+
   SNSTopic:
     Type: AWS::SNS::Topic
     Properties:
@@ -238,6 +271,14 @@ Resources:
       UserPoolId: !Ref CognitoUserPool
 
 Outputs:
+  EndpointForCreateReport:
+    Description: "API Gateway endpoint URL for Prod stage for Create Report"
+    Value: !Sub "https://${BikeAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/create-report"
+
+  StateMachineArn:
+    Description: "Step Functions state machine arn for email report"
+    Value: !Ref StateMachine
+
   MicroserviceApi:
     Description: "API Gateway endpoint URL for Prod stage"
     Value: !Sub "https://${BikeAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod"
