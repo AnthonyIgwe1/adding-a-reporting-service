@@ -46,22 +46,42 @@ Resources:
     Properties:
       Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/LambdaApplicationRoleSam'
       DefinitionSubstitutions:
-        GeneratePresignedURLArn: !GetAtt GeneratePresignedURLFunction.Arn #NEWLY ADDED
+        GenerateHTMLArn: !GetAtt GenerateHTMLFunction.Arn #NEWLY ADDED
+        GeneratePresignedURLArn: !GetAtt GeneratePresignedURLFunction.Arn
+        GenerateReportDataArn: !GetAtt GenerateReportDataFunction.Arn #NEWLY ADDED
+        SNSTopicArn: !Ref SNSTopic
       Definition:
-        Comment: Email Report Generation State Machine
-        StartAt: GeneratePresignedURL #NEWLY ADDED
+        Comment: Report Generation State Machine
+        StartAt: GenerateReportData #NEWLY ADDED
         States:
-          GeneratePresignedURL: #NEWLY ADDED
+          GenerateReportData: #NEWLY ADDED
             Type: Task #NEWLY ADDED
-            Resource: "${GeneratePresignedURLArn}" #NEWLY ADDED
-            Next: TriggerSNS #NEWLY ADDED
+            Resource: "${GenerateReportDataArn}" #NEWLY ADDED
+            Next: Parallel #NEWLY ADDED
+          Parallel: #NEWLY ADDED
+            Type: Parallel #NEWLY ADDED
+            Branches: #NEWLY ADDED
+              - StartAt: GenerateHTML #NEWLY ADDED
+                States: #NEWLY ADDED
+                  GenerateHTML: #NEWLY ADDED
+                    Type: Task #NEWLY ADDED
+                    Resource: "${GenerateHTMLArn}" #NEWLY ADDED
+                    End: true #NEWLY ADDED
+              - StartAt: GeneratePresignedURL #NEWLY ADDED
+                States: #NEWLY ADDED
+                  GeneratePresignedURL: #NEWLY ADDED
+                    Type: Task #NEWLY ADDED
+                    Resource: "${GeneratePresignedURLArn}"
+                    End: true #NEWLY ADDED
+            Next: TriggerSNS
           TriggerSNS:
             Type: Task
             Resource: arn:aws:states:::sns:publish
             Parameters:
-              TopicArn: !Ref SNSTopic
-              Message.$: "$.presigned_url_str"
+              TopicArn: "${SNSTopicArn}"
+              Message.$: "$"
             End: true
+
 
 
   SNSTopic:
