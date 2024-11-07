@@ -45,10 +45,16 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/LambdaApplicationRoleSam'
+      DefinitionSubstitutions:
+        GeneratePresignedURLArn: !GetAtt GeneratePresignedURLFunction.Arn #NEWLY ADDED
       Definition:
         Comment: Email Report Generation State Machine
-        StartAt: TriggerSNS
+        StartAt: GeneratePresignedURL #NEWLY ADDED
         States:
+          GeneratePresignedURL: #NEWLY ADDED
+            Type: Task #NEWLY ADDED
+            Resource: "${GeneratePresignedURLArn}" #NEWLY ADDED
+            Next: TriggerSNS #NEWLY ADDED
           TriggerSNS:
             Type: Task
             Resource: arn:aws:states:::sns:publish
@@ -56,6 +62,7 @@ Resources:
               TopicArn: !Ref SNSTopic
               Message.$: "$.presigned_url_str"
             End: true
+
 
   SNSTopic:
     Type: AWS::SNS::Topic

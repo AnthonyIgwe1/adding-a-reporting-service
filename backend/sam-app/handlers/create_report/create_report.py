@@ -7,7 +7,7 @@ def lambda_handler(event, context):
 
     # Input used when the state machine starts execution.
     input_data = {
-      "presigned_url_str": "Testing that my email message works"
+      
     }
 
     # Creates a Step Functions client and starts the state machine execution.
