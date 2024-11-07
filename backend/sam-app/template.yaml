@@ -40,6 +40,8 @@ Resources:
             RestApiId: !Ref BikeAPI
             Path: /create-report
             Method: post
+            Auth: #NEWLY ADDED
+              Authorizer: CognitoAuthorizer #NEWLY ADDED
 
   StateMachine:
     Type: AWS::Serverless::StateMachine
@@ -81,7 +83,6 @@ Resources:
               TopicArn: "${SNSTopicArn}"
               Message.$: "$"
             End: true
-
 
 
   SNSTopic:
