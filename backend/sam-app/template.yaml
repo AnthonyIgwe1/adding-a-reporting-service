@@ -14,6 +14,18 @@ Globals:
       LogFormat: JSON
 
 Resources:
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: EmailReport
+  
+  SNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref SNSTopic
+      Protocol: email
+      Endpoint: metony157@gmail.com # REPLACE WITH VALID EMAIL
+
   BikeAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -213,9 +225,9 @@ Resources:
         - openid
         - aws.cognito.signin.user.admin
       CallbackURLs:
-        - https://UNIQUE-ID.vfs.cloud9.REGION.amazonaws.com # REPLACE WITH BIKE APP URL
+        - https://2f43f167e9944e5e9ada5580324b351f.vfs.cloud9.us-west-2.amazonaws.com # REPLACE WITH BIKE APP URL
       LogoutURLs:
-        - https://UNIQUE-ID.vfs.cloud9.REGION.amazonaws.com # REPLACE WITH BIKE APP URL
+        - https://2f43f167e9944e5e9ada5580324b351f.vfs.cloud9.us-west-2.amazonaws.com # REPLACE WITH BIKE APP URL
       SupportedIdentityProviders:
         - COGNITO
 

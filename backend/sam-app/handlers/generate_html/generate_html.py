@@ -17,7 +17,7 @@ def write_report(html_str):
     s3 = boto3.client('s3')
 
     params = {
-        'Bucket': 'report-XXXXXXXXXXXX-YYYYMMDD',
+		'Bucket': 'report-363548493921-20241107',
         'Key': 'report.html',
         'Body': html_str.encode(),
         'CacheControl': 'max-age=0',
